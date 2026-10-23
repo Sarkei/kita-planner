@@ -1,8 +1,11 @@
 # Kita Planner
 
-Aus Google Drive übernommenes Projekt-Repository.
+Web-App zur Planung im Kita-Alltag: Angebote, Gruppen und Tagesabläufe an einem Ort.
+Frontend mit React, TypeScript und Vite, Styling über Tailwind. Texte für Angebote
+lassen sich per Mistral AI generieren; die Schlüssel liegen in `.env` (Vorlage:
+`.env.example`), nicht im Repo.
 
-**Technik:** `Node.js` · `React` · `TypeScript` · `Vite` · `Tailwind CSS` · `Docker Compose`
+**Technik:** `React` · `TypeScript` · `Vite` · `Tailwind CSS` · `Docker Compose`
 
 ## Inhalt
 
