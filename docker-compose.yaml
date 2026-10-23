@@ -1,0 +1,81 @@
+services:
+  kita-planner:
+    container_name: kita-planner
+    env_file:
+      - .env
+    environment:
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-kita_planer}
+      POSTGRES_HOST: postgres
+      PORT: "4466"
+      NODE_ENV: production
+      KITAPL_WEB_ROOT: /app/web
+      # .env auf dem Host hat oft DATABASE_URL=...@localhost — im Container ungültig; Compose setzt db.
+      DATABASE_URL: ""
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_MISTRAL_TEXT_MODEL: ${VITE_MISTRAL_TEXT_MODEL:-}
+        VITE_MISTRAL_IMAGE_CONVERSATION_MODEL: ${VITE_MISTRAL_IMAGE_CONVERSATION_MODEL:-}
+    ports:
+      - "4466:4466"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-fsS",
+          "http://127.0.0.1:4466/api/health",
+          "-o",
+          "/dev/null",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: always
+    # Wie fitness_tracker: explizites default + cloudflare; Aliase auf cloudflare
+    # damit cloudflared http://kita-planner:4466 auflösen kann (gleiches Netz).
+    networks:
+      - default
+      - cloudflare
+
+  postgres:
+    env_file:
+      - .env
+    container_name: kita-planner-db
+    image: postgres:15-alpine
+    ports:
+      - "4455:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-kita_planer}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: always
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge
+  cloudflare:
+    external: true
+    name: cloudflare-tunnel-net
