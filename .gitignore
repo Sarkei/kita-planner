@@ -27,7 +27,6 @@ dist-ssr
 .env.local
 
 # System
-.DS_Store
 Thumbs.db
 desktop.ini
 
@@ -38,7 +37,6 @@ desktop.ini
 *.swo
 
 # Logs und Temp
-*.log
 *.tmp
 
 # Node
@@ -49,13 +47,8 @@ build/
 .nuxt/
 coverage/
 *.tsbuildinfo
-npm-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
 # Docker / lokal
-.env
-.env.local
 .env.*.local
 docker-compose.override.yml
 
