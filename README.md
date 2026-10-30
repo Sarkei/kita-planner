@@ -42,14 +42,15 @@ lassen sich in einer Bibliothek durchsuchen und als PDF exportieren.
 | Frontend | React 19, TypeScript, Vite 6, Tailwind CSS 4, `react-router-dom` (HashRouter) |
 | Backend | Express 4, `pg`, TypeScript, `ts-node-dev` in Entwicklung |
 | Datenbank | PostgreSQL 15, Tabelle `offers` (`offer_id`, `title`, `created_at`, `data` als `JSONB`) |
-| KI | Mistral: `/v1/chat/completions` (Text), `/v1/conversations` mit Tool `image_generation`, Bildabruf `/v1/files/{id}/content` |
+| KI | Mistral, aber **nur über den eigenen Server**: `/api/ai/chat`, `/api/ai/conversations`, `/api/ai/files/{id}/content`. Der Schlüssel bleibt im Container. |
 | Export / Tests | `jspdf`, `jspdf-autotable`; Vitest mit jsdom und Testing Library |
 | Betrieb | Ein Image: Vite-Build + kompilierter Express-Server, Statik und `/api/*` auf Port 4466 |
 
 Der Server verbindet sich vor `listen` mit Postgres (bis zu 25 Versuche, 2,5 s Abstand) und
 legt Tabelle und Indizes per `CREATE TABLE IF NOT EXISTS` an; `GET /api/health` antwortet
-erst danach. Beim Containerstart schreibt `docker/frontend-inject-config.cjs` den Schlüssel
-inline in `index.html`.
+erst danach. Die KI-Aufrufe laufen über `server/src/mistral.ts`: der Server hängt den
+Schlüssel an und gibt die Antwort unverändert zurück. Einzeln gedrosselt wird pro
+Besucher-IP (`AI_RATE_LIMIT_PER_HOUR`, Standard 120 pro Stunde).
 
 ## Projektstruktur
 
@@ -61,9 +62,7 @@ components/          Layout, OfferForm, OfferDisplay, Library, Confirm
 src/components/      Toasts, Confirm.test.tsx
 services/            api.ts (REST-Client), mistralService.ts, libraryAiSearch.ts
 utils/               pdfGenerator.ts, seasonYear.ts, preparationFormat.ts
-server/src/          index.ts (Routen), db.ts (Pool/Schema), offersFilter.ts, seasonLabel.ts
-docker/              app-entrypoint.sh, frontend-inject-config.cjs
-public/config.js     Platzhalter für den Dev-Server
+server/src/          index.ts (Routen), mistral.ts (KI-Proxy), db.ts (Pool/Schema), offersFilter.ts, seasonLabel.ts
 Dockerfile           Stufen web-build, server-build, Runtime
 docker-compose.yaml  kita-planner + postgres
 nginx.conf           Legacy, wird nicht mehr gebaut
@@ -85,7 +84,8 @@ docker compose up -d --build
 curl -fsS http://127.0.0.1:4466/api/health
 ```
 
-Ports: App 4466 (UI und `/api` im selben Prozess), Postgres 4455 → 5432. Das Compose-File
+Ports: App 4466 (UI und `/api` im selben Prozess). Postgres hat bewusst **keinen** Port nach
+außen mehr — die Datenbank ist nur im Compose-Netz erreichbar. Das Compose-File
 bindet das externe Netz `cloudflare-tunnel-net` ein; existiert es nicht, schlägt `compose`
 fehl – `docker network create cloudflare-tunnel-net` ausführen oder den `cloudflare`-Eintrag
 samt Netzblock entfernen.
@@ -97,9 +97,11 @@ Alle Werte in `.env` (Vorlage `.env.example`); echte Schlüssel nicht committen.
 | Variable | Zweck |
 |---|---|
 | `VITE_API_URL` | Basis-URL der API im Browser: lokal `http://localhost:5000/api`, im Docker-Build `/api` |
-| `MISTRAL_API_KEY` | Schlüssel für Text und Bilder; lokal über Vite eingebettet, im Container beim Start in `index.html` injiziert |
-| `VITE_MISTRAL_TEXT_MODEL` | Optionaler Override des Textmodells (Vorgabe `mistral-large-latest`), Build-Time-Define |
-| `VITE_MISTRAL_IMAGE_CONVERSATION_MODEL` | Optionaler Override des Bildmodells (Vorgabe `mistral-medium-latest`), Build-Time-Define |
+| `MISTRAL_API_KEY` | Schlüssel für Text und Bilder — **nur serverseitig**, verlässt den Container nicht |
+| `MISTRAL_TEXT_MODEL` | Textmodell des Servers (Vorgabe `mistral-large-latest`); Änderung braucht nur einen Neustart |
+| `MISTRAL_IMAGE_CONVERSATION_MODEL` | Bildmodell (Vorgabe `mistral-medium-latest`); ebenfalls nur Neustart |
+| `AI_RATE_LIMIT_PER_HOUR` | KI-Anfragen pro Besucher-IP und Stunde (Vorgabe 120) |
+| `CORS_ORIGIN` | Nur setzen, wenn ein externer Dev-Server zugreift; sonst bleibt CORS zu |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Zugangsdaten und Datenbankname für Container und Server |
 | `POSTGRES_HOST`, `POSTGRES_PORT` | Verbindungsziel des Servers; Compose setzt `POSTGRES_HOST=postgres` |
 | `DATABASE_URL` | Alternative Verbindungszeichenfolge; `localhost` wird im Container ignoriert, Compose setzt sie leer |
@@ -109,11 +111,10 @@ Alle Werte in `.env` (Vorlage `.env.example`); echte Schlüssel nicht committen.
 
 ## Hinweise
 
-- **Schlüssel im Browser.** `MISTRAL_API_KEY` wird beim Build bzw. Start in die ausgelieferte Seite geschrieben und ist für jeden Client auslesbar – gedacht für privaten Betrieb hinter Tunnel, nicht für öffentliche Instanzen.
-- **Modell-Overrides brauchen einen Rebuild.** `VITE_MISTRAL_*` sind Compile-Time-Defines; danach `docker compose build` und Neustart.
+- **Kein Schlüssel im Browser.** Die KI läuft über `/api/ai/*`; im ausgelieferten JavaScript steht nichts Geheimes. Ein Rate-Limit pro IP verhindert, dass ein Besucher das Kontingent leerzieht.
+- **Keine Anmeldung.** Wer die Adresse kennt, kann Angebote anlegen und löschen. Für eine öffentliche Instanz gehört ein Cloudflare-Access davor oder ein Passwort-Gate (noch nicht eingebaut).
 - **Startreihenfolge.** Der Port öffnet erst nach DB-Verbindung; auf langsamen NAS liefert `/api/health` ein bis zwei Minuten nichts. Der Client wiederholt 503 bis 10-mal, 502/504 bis 5-mal.
-- **`nginx.conf` ist Legacy.** Das Produktions-Image liefert Statik und `/api` über Express.
-- **Doku-Drift.** `README-Docker.md` nennt teils den Compose-Service `app`, tatsächlich heißt er `kita-planner`; Port- und Netzwerkhinweise dort stimmen, Befehle mit `app` nicht.
+- **`nginx.conf` ist Legacy.** Das Produktions-Image liefert Statik und `/api` über Express — die Datei kann weg, sobald niemand mehr den alten Nginx-Weg baut.
 - **Gemischte Ordner.** Kleine Komponenten unter `components/`, Toasts und Test unter `src/components/`; `App.tsx` importiert beide Pfade.
 - **Testabdeckung.** Vitest ist auf `src/**/*.test.tsx` konfiguriert, vorhanden ist nur `Confirm.test.tsx`; Angebots- und PDF-Logik sind ungetestet.
 - Die Git-Historie beginnt mit einem Import aus Google Drive.

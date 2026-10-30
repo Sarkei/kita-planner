@@ -1,66 +1,42 @@
 import { OfferInput, OfferCategory, OfferData } from '../types';
 import { normalizeAiPreparation } from '../utils/preparationFormat';
+import { API_BASE } from './api';
 
-declare global {
-  interface Window {
-    __KITAPL_CONFIG__?: { MISTRAL_API_KEY?: string };
-  }
-}
+/**
+ * Alle KI-Aufrufe laufen über den eigenen Server (`/api/ai/*`). Der Mistral-Schlüssel
+ * liegt ausschließlich im Container — im Browser ist er weder sichtbar noch nutzbar.
+ * Die Modellnamen setzt der Server aus seiner Umgebung.
+ */
+const AI_BASE = `${API_BASE}/ai`;
 
-const PLACEHOLDER_SUBSTRINGS = ['your_mistral_api_key_here'];
-
-function isConfiguredApiKey(key: string | undefined | null): boolean {
-  if (key == null || typeof key !== 'string') return false;
-  const t = key.trim();
-  if (t.length < 8) return false;
-  const lower = t.toLowerCase();
-  if (PLACEHOLDER_SUBSTRINGS.some((p) => lower.includes(p))) return false;
-  if (/^your[_\s]/i.test(t) && /key/i.test(t)) return false;
-  return true;
-}
-
-/** Compile-time (vite) + optional Docker runtime (config.js oder inline in index.html). */
-const TEXT_MODEL = (process.env.MISTRAL_TEXT_MODEL || 'mistral-large-latest').trim();
-/** Modell für Bild-Tool (Mistral Agents / conversations). */
-const IMAGE_CONVERSATION_MODEL = (
-  process.env.MISTRAL_IMAGE_CONVERSATION_MODEL || 'mistral-medium-latest'
-).trim();
-
-function readRuntimeMistralKey(): string {
-  if (typeof window === 'undefined') return '';
-  const v = window.__KITAPL_CONFIG__?.MISTRAL_API_KEY;
-  if (typeof v !== 'string') return '';
-  return v.replace(/^\uFEFF/, '').trim();
-}
-
-function getBuildTimeApiKey(): string {
-  return (process.env.MISTRAL_API_KEY || process.env.API_KEY || '').trim();
-}
-
-export function getEffectiveApiKey(): string {
-  const runtime = readRuntimeMistralKey();
-  if (runtime) return runtime;
-  return getBuildTimeApiKey();
-}
+/** Vom Server gemeldeter Zustand, beim App-Start einmal abgefragt. */
+let aiReady = true;
+let aiStatusLoaded = false;
 
 export function isMistralConfigured(): boolean {
-  return isConfiguredApiKey(getEffectiveApiKey());
+  return aiReady;
 }
 
-const MISTRAL_CHAT_URL = 'https://api.mistral.ai/v1/chat/completions';
-const MISTRAL_CONVERSATIONS_URL = 'https://api.mistral.ai/v1/conversations';
+export async function refreshAiStatus(): Promise<boolean> {
+  try {
+    const resp = await fetch(`${AI_BASE}/status`);
+    if (!resp.ok) throw new Error(String(resp.status));
+    const data = (await resp.json()) as { configured?: boolean };
+    aiReady = Boolean(data.configured);
+    aiStatusLoaded = true;
+  } catch {
+    if (!aiStatusLoaded) aiReady = true;
+  }
+  return aiReady;
+}
 
 type MistralChatMsg = { role: string; content: string };
 
 async function mistralChatJson(messages: MistralChatMsg[]): Promise<{ text: string; totalTokens: number }> {
-  const key = getEffectiveApiKey();
-  if (!isConfiguredApiKey(key)) throw new Error('MISTRAL_API_KEY not configured');
-
-  const resp = await fetch(MISTRAL_CHAT_URL, {
+  const resp = await fetch(`${AI_BASE}/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: TEXT_MODEL,
       messages,
       response_format: { type: 'json_object' },
       temperature: 0.7,
@@ -115,10 +91,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 async function downloadMistralFileAsDataUrl(fileId: string): Promise<string | null> {
-  const key = getEffectiveApiKey();
-  const resp = await fetch(`https://api.mistral.ai/v1/files/${encodeURIComponent(fileId)}/content`, {
-    headers: { Authorization: `Bearer ${key}` },
-  });
+  const resp = await fetch(`${AI_BASE}/files/${encodeURIComponent(fileId)}/content`);
   if (!resp.ok) {
     console.error('Mistral file download failed', resp.status, await resp.text());
     return null;
@@ -173,7 +146,7 @@ export function describeGenerationError(err: unknown): string {
   }
   if (/not found|NOT_FOUND|unsupported|404|model|unknown model/i.test(base)) {
     hintParts.push(
-      `Modell prüfen (Text: ${TEXT_MODEL}, Bild-Chat: ${IMAGE_CONVERSATION_MODEL}). Optional in .env: VITE_MISTRAL_TEXT_MODEL / VITE_MISTRAL_IMAGE_CONVERSATION_MODEL, dann Frontend neu bauen.`,
+      'Modell prüfen: MISTRAL_TEXT_MODEL bzw. MISTRAL_IMAGE_CONVERSATION_MODEL in der .env des Servers, danach Container neu starten.',
     );
   }
   if (/quota|429|rate|limit|too many/i.test(base)) {
@@ -221,9 +194,9 @@ const incrementUsage = (tokenCount: number = 0) => {
 // --- Generation ---
 
 export const generateOfferText = async (input: OfferInput): Promise<Partial<OfferData>> => {
-  if (!isConfiguredApiKey(getEffectiveApiKey())) {
+  if (!isMistralConfigured()) {
     throw new Error(
-      'Kein gültiger MISTRAL_API_KEY: In `.env` setzen (`MISTRAL_API_KEY=...`), Docker: `docker compose up -d frontend` (Image mit inject neu bauen, falls alt). Prüfen: `printenv MISTRAL_API_KEY` im Container. Lokal: `.env` im Ordner mit vite.config + `npm run dev`.',
+      'Der Server hat keinen Mistral-Schlüssel: in der .env des Servers MISTRAL_API_KEY setzen und den Container neu starten.',
     );
   }
 
@@ -356,7 +329,7 @@ export const generateIllustration = async (
   prompt: string,
   aspectRatio: '1:1' | '4:3' | '16:9' = '1:1',
 ): Promise<string | null> => {
-  if (!isConfiguredApiKey(getEffectiveApiKey())) return null;
+  if (!isMistralConfigured()) return null;
 
   const arHint =
     aspectRatio === '4:3'
@@ -369,12 +342,10 @@ export const generateIllustration = async (
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const key = getEffectiveApiKey();
-      const resp = await fetch(MISTRAL_CONVERSATIONS_URL, {
+      const resp = await fetch(`${AI_BASE}/conversations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: IMAGE_CONVERSATION_MODEL,
           tools: [{ type: 'image_generation' }],
           instructions:
             'Wenn der Nutzer eine Illustration möchte, rufe genau einmal das Tool image_generation auf. Keine reine Textbeschreibung statt Bild.',

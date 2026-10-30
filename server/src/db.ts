@@ -72,7 +72,7 @@ const INIT_TABLE = `
 `;
 
 const INIT_IDX_CREATED = `CREATE INDEX IF NOT EXISTS idx_offers_created_at ON offers(created_at DESC);`;
-const INIT_IDX_OFFER_ID = `CREATE INDEX IF NOT EXISTS idx_offers_offer_id ON offers(offer_id);`;
+const INIT_IDX_OFFER_ID = `CREATE UNIQUE INDEX IF NOT EXISTS idx_offers_offer_id ON offers(offer_id);`;
 
 const MAX_CONNECT_ATTEMPTS = 25;
 const RETRY_DELAY_MS = 2500;

@@ -12,11 +12,11 @@ const isIOS = () => {
 };
 
 export const generatePDF = async (offer: OfferData): Promise<void> => {
-  const doc = offer.input.category === OfferCategory.KAMISHIBAI && offer.kamishibaiScenes
+  const doc = (offer.input?.category === OfferCategory.KAMISHIBAI) && offer.kamishibaiScenes
     ? generateKamishibaiPDFDoc(offer)
     : generateStandardPDFDoc(offer);
 
-  const fileName = offer.input.category === OfferCategory.KAMISHIBAI 
+  const fileName = (offer.input?.category === OfferCategory.KAMISHIBAI) 
     ? `${offer.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_kamishibai.pdf`
     : `${offer.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
 
@@ -87,7 +87,7 @@ const generateStandardPDFDoc = (offer: OfferData): jsPDF => {
   doc.setFontSize(11);
   doc.setTextColor(107, 114, 128); // Gray-500
   doc.setFont("helvetica", "normal");
-  doc.text(`${offer.input.category}  |  ${offer.input.targetGroup}  |  ${offer.input.duration}`, margin, yPos);
+  doc.text(`${offer.input?.category ?? ''}  |  ${offer.input?.targetGroup ?? ''}  |  ${offer.input?.duration ?? ''}`, margin, yPos);
   yPos += 10;
 
   // Separator

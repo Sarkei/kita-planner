@@ -6,12 +6,9 @@ FROM node:20-bookworm-slim AS web-build
 
 WORKDIR /app
 
+# Der Browser bekommt nur die API-Basis; Modellnamen und Schlüssel bleiben im Server.
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
-ARG VITE_MISTRAL_TEXT_MODEL
-ARG VITE_MISTRAL_IMAGE_CONVERSATION_MODEL
-ENV VITE_MISTRAL_TEXT_MODEL=$VITE_MISTRAL_TEXT_MODEL
-ENV VITE_MISTRAL_IMAGE_CONVERSATION_MODEL=$VITE_MISTRAL_IMAGE_CONVERSATION_MODEL
 
 COPY package*.json ./
 
@@ -88,7 +85,6 @@ ENV PORT=4466
 WORKDIR /app
 
 COPY --from=web-build /app/dist /app/web
-RUN cp /app/web/index.html /app/web/index.html.tmpl
 
 WORKDIR /app/server
 COPY --from=server-build /server/package*.json ./
@@ -100,11 +96,8 @@ RUN set -eux; \
 		fi
 COPY --from=server-build /server/dist ./dist
 
-WORKDIR /app
-COPY docker/frontend-inject-config.cjs /app/inject-config.cjs
-COPY docker/app-entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+WORKDIR /app/server
 
 EXPOSE 4466
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["node", "dist/index.js"]

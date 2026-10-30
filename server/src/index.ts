@@ -5,6 +5,7 @@ import cors from 'cors';
 import { connectDatabase, query, logPoolTarget } from './db';
 import { seasonPeriodFromOfferData } from './seasonLabel';
 import { buildOfferFilters } from './offersFilter';
+import { mistralRouter } from './mistral';
 
 const webRoot = (process.env.KITAPL_WEB_ROOT || process.env.STATIC_ROOT || '').trim();
 const port: number = (() => {
@@ -15,9 +16,25 @@ const port: number = (() => {
 
 const app = express();
 
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+/**
+ * Die SPA läuft im selben Prozess wie die API — CORS braucht es nur, wenn ein
+ * separater Dev-Server zugreift. Deshalb nur auf ausdrückliche Freigabe öffnen.
+ */
+const corsOrigin = (process.env.CORS_ORIGIN || '').trim();
+if (corsOrigin) {
+  app.use(cors({ origin: corsOrigin.split(',').map((o) => o.trim()) }));
+}
+
+app.disable('x-powered-by');
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
+
+/**
+ * KI-Proxy: eigener Body-Limit, weil hier nur Text und kleine Steuerdaten laufen.
+ * Der Mistral-Schlüssel bleibt ausschließlich im Container.
+ */
+app.use('/api/ai', express.json({ limit: '2mb' }), mistralRouter);
 
 app.get('/api/health', (_req: Request, res: Response) => {
   /** Sobald der Server antwortet, ist die DB verbunden (connectDatabase vor listen). */
@@ -84,20 +101,25 @@ app.get('/api/offers', async (req: Request, res: Response) => {
 app.post('/api/offers', async (req: Request, res: Response) => {
   try {
     const offer = req.body;
-    console.log('Saving offer:', offer.id, offer.title);
-    const { id, title } = offer;
+    console.log('Saving offer:', offer?.id, offer?.title);
+    const { id, title } = offer ?? {};
 
     if (!id || !title) {
       console.error('Missing id or title');
       return res.status(400).json({ error: 'Missing id or title' });
     }
-
-    const existing = await query('SELECT id FROM offers WHERE offer_id = $1', [id]);
-    if (existing.rows.length > 0) {
-      await query('UPDATE offers SET title = $1, data = $2 WHERE offer_id = $3', [title, offer, id]);
-    } else {
-      await query('INSERT INTO offers (offer_id, title, data) VALUES ($1, $2, $3)', [id, title, offer]);
+    // Ohne `input` fehlen Kategorie/Zielgruppe/Dauer — solche Angebote würden die
+    // Bibliothek beim Anzeigen zerlegen.
+    if (typeof offer.input !== 'object' || offer.input === null) {
+      return res.status(400).json({ error: 'Missing input' });
     }
+
+    // Ein Statement statt SELECT+INSERT: keine Dubletten, wenn zwei Saves gleichzeitig kommen.
+    await query(
+      `INSERT INTO offers (offer_id, title, data) VALUES ($1, $2, $3)
+       ON CONFLICT (offer_id) DO UPDATE SET title = EXCLUDED.title, data = EXCLUDED.data`,
+      [id, title, offer],
+    );
 
     res.status(201).json(offer);
   } catch (err) {

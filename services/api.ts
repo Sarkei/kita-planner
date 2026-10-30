@@ -4,6 +4,9 @@ import { SavedOffer } from '../types';
 const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
 const API_URL = (raw?.replace(/\/$/, '') || '/api') as string;
 
+/** Basis für alle API-Aufrufe — auch der KI-Proxy hängt hierunter. */
+export const API_BASE = API_URL;
+
 /** Während Container-Start: kurze 503-Retries (Backend sollte keinen Dauer-503 mehr senden). */
 const SOFT_RETRY_MAX = 10;
 const SOFT_RETRY_DELAY_MS = 400;
