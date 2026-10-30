@@ -324,7 +324,7 @@ Antwortformat: NUR ein JSON-Objekt (ohne Markdown), exakt mit diesen Keys:
 - title: string
 - materials: Array von { item: string, amount?: string|null }
 - goals: string[]
-- preparation: mehrzeiliger string — nur nummerierte Vorbereitungsschritte; genau ein Schritt pro Zeile, jede Zeile beginnt mit "N. " (z. B. "1. ...\\n2. ...\\n3. ..."). Kein Fließtext in einer Zeile mit mehreren "N."-Punkten.
+- preparation: mehrzeiliger string — nur nummerierte Vorbereitungsschritte, genau ein Schritt pro Zeile, jede Zeile beginnt mit ihrer eigenen Nummer (z. B. "1. Turnhalle vorbereiten", "2. Material bereitlegen"). Kein Platzhalter wie "N." und kein Fließtext mit mehreren Punkten in einer Zeile.
 - steps: Array von { step: number, instruction: string, imagePrompt: string }
 `.trim();
 
