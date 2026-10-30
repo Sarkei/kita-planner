@@ -384,7 +384,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
             <div className="p-6 flex-1 flex flex-col">
               <div className="flex justify-between items-start mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 px-2 py-1 rounded border border-orange-100 dark:border-orange-500/20">
-                  {offer.input.category}
+                  {offer.input?.category ?? '–'}
                 </span>
                 <div className="flex gap-1">
                   <button
@@ -418,8 +418,8 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                   </span>
                 </div>
                 <div className="pl-6 text-slate-400 dark:text-slate-500 text-xs flex justify-between gap-2">
-                  <span className="truncate">{offer.input.targetGroup}</span>
-                  <span className="shrink-0">{offer.input.duration}</span>
+                  <span className="truncate">{offer.input?.targetGroup ?? '–'}</span>
+                  <span className="shrink-0">{offer.input?.duration ?? '–'}</span>
                 </div>
               </div>
 

@@ -6,7 +6,7 @@ import OfferDisplay from './components/OfferDisplay';
 import Library from './components/Library';
 import { ConfirmProvider } from './components/Confirm';
 import { ToastProvider, useToasts } from './src/components/Toasts';
-import { generateOfferText, generateIllustration, getApiUsage, API_DAILY_LIMIT, describeGenerationError } from './services/mistralService';
+import { generateOfferText, generateIllustration, getApiUsage, API_DAILY_LIMIT, describeGenerationError, refreshAiStatus } from './services/mistralService';
 import { api } from './services/api';
 import { OfferInput, OfferData, SavedOffer, OfferCategory } from './types';
 
@@ -121,6 +121,11 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
     setApiUsage(getApiUsage());
   };
   const toasts = useToasts();
+
+  /** Einmal beim Start klären, ob der Server einen Mistral-Schlüssel hat. */
+  useEffect(() => {
+    void refreshAiStatus();
+  }, []);
 
   const handleCancelGeneration = () => {
     isCancelledRef.current = true;

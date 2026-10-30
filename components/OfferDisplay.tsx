@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { OfferData, OfferCategory, MaterialItem } from '../types';
 import { CheckCircle, Clock, Users, Download, Scissors, Image as ImageIcon, Check, Edit2, FileText, Loader2 } from 'lucide-react';
 import { useToasts } from '../src/components/Toasts';
+import { preparationItemsForList } from '../utils/preparationFormat';
+import { generatePDF } from '../utils/pdfGenerator';
 
 interface OfferDisplayProps {
   offer: OfferData;
@@ -50,7 +52,7 @@ const OfferDisplay: React.FC<OfferDisplayProps> = ({ offer, onUpdate, isAutoGene
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<any>(null);
 
-  const isKamishibai = offer.input.category === OfferCategory.KAMISHIBAI;
+  const isKamishibai = offer.input?.category === OfferCategory.KAMISHIBAI;
   const preparationItems = preparationItemsForList(offer.preparation);
 
   useEffect(() => {
@@ -157,7 +159,7 @@ const OfferDisplay: React.FC<OfferDisplayProps> = ({ offer, onUpdate, isAutoGene
         <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
           <div className="flex-1">
              <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs font-bold tracking-wide uppercase mb-3">
-                {offer.input.category}
+                {offer.input?.category ?? '–'}
              </span>
              
              {editingSection === 'title' ? (
@@ -180,8 +182,8 @@ const OfferDisplay: React.FC<OfferDisplayProps> = ({ offer, onUpdate, isAutoGene
              )}
 
             <div className="flex flex-wrap items-center gap-6 text-slate-500 dark:text-slate-400 text-sm font-medium">
-                <span className="flex items-center gap-2"><Clock size={18} className="text-orange-500"/> {offer.input.duration}</span>
-                <span className="flex items-center gap-2"><Users size={18} className="text-orange-500"/> {offer.input.targetGroup}</span>
+                <span className="flex items-center gap-2"><Clock size={18} className="text-orange-500"/> {offer.input?.duration ?? '–'}</span>
+                <span className="flex items-center gap-2"><Users size={18} className="text-orange-500"/> {offer.input?.targetGroup ?? '–'}</span>
             </div>
           </div>
           

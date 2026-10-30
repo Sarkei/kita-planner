@@ -1,13 +1,9 @@
 import { SavedOffer } from '../types';
-import { getEffectiveApiKey } from './mistralService';
+import { API_BASE } from './api';
+import { isMistralConfigured } from './mistralService';
 
-const CHAT_URL = 'https://api.mistral.ai/v1/chat/completions';
-const MODEL = (process.env.MISTRAL_TEXT_MODEL || 'mistral-large-latest').trim();
-
-function mistralKeyOk(): boolean {
-  const k = getEffectiveApiKey().trim();
-  return k.length >= 8;
-}
+/** Läuft über den Server-Proxy — kein Schlüssel im Browser. */
+const CHAT_URL = `${API_BASE}/ai/chat`;
 
 type IdRow = { id: string; title: string; category: string; topic: string; goals: string; text: string };
 
@@ -25,8 +21,8 @@ function summarize(o: SavedOffer): IdRow {
   return {
     id: o.id,
     title: o.title,
-    category: o.input.category,
-    topic: o.input.topic || '',
+    category: o.input?.category ?? '',
+    topic: o.input?.topic || '',
     goals,
     text,
   };
@@ -38,16 +34,14 @@ export async function semanticLibraryRank(
   offers: SavedOffer[],
 ): Promise<string[]> {
   const q = userQuery.trim();
-  if (!q || !mistralKeyOk() || offers.length === 0) {
+  if (!q || !isMistralConfigured() || offers.length === 0) {
     return offers.map((o) => o.id);
   }
 
   const max = 52;
   const rows = offers.slice(0, max).map(summarize);
-  const key = getEffectiveApiKey();
 
   const payload = {
-    model: MODEL,
     temperature: 0.2,
     max_tokens: 1200,
     response_format: { type: 'json_object' },
@@ -66,7 +60,7 @@ export async function semanticLibraryRank(
 
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   if (!resp.ok) {
