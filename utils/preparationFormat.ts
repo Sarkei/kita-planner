@@ -26,10 +26,21 @@ export function normalizeAiPreparation(raw: unknown): string {
   return coalesceNumberedRunOn(raw);
 }
 
-/** Für UI/PDF: einzelne Punkte ohne führende "N." (wird als <ol> gerendert). */
+/**
+ * Manche Modelle stellen der Nummer noch einen Platzhalter voran ("1. N. Turnhalle …")
+ * oder schreiben "N." statt einer Zahl. Beides wird entfernt.
+ */
+function stripNumberAndPlaceholder(line: string): string {
+  return line
+    .replace(/^\s*(?:\d{1,2}|N)\s*[.)]\s*/i, '')
+    .replace(/^N[.)]\s+/i, '')
+    .trim();
+}
+
+/** Für UI/PDF: einzelne Punkte ohne führende Nummer (wird als <ol> gerendert). */
 export function preparationItemsForList(text: string): string[] {
   return normalizeAiPreparation(text)
     .split(/\n+/)
-    .map((s) => s.replace(/^\d+\.\s*/, '').trim())
+    .map(stripNumberAndPlaceholder)
     .filter(Boolean);
 }

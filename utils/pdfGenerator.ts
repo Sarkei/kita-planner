@@ -96,37 +96,48 @@ const generateStandardPDFDoc = (offer: OfferData): jsPDF => {
   doc.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 15;
 
+  /** Sorgt dafür, dass `height` noch auf die Seite passt — sonst neue Seite. */
+  const ensureSpace = (height: number) => {
+    if (yPos + height > pageHeight - margin) {
+      doc.addPage();
+      yPos = margin;
+    }
+  };
+
+  const lineHeight = 6;
+
   // --- Goals ---
   doc.setFontSize(14);
-  doc.setTextColor(31, 41, 55); // Gray-800
+  doc.setTextColor(31, 41, 55);
   doc.setFont("helvetica", "bold");
+  ensureSpace(16);
   doc.text("Pädagogische Ziele", margin, yPos);
   yPos += 8;
 
   doc.setFontSize(11);
-  doc.setTextColor(55, 65, 81); // Gray-700
+  doc.setTextColor(55, 65, 81);
   doc.setFont("helvetica", "normal");
-  offer.goals.forEach(goal => {
-    const goalText = `• ${goal}`;
-    const splitText = doc.splitTextToSize(goalText, contentWidth);
-    doc.text(splitText, margin, yPos);
-    yPos += (splitText.length * 6) + 2;
+  offer.goals.forEach((goal) => {
+    const lines = doc.splitTextToSize(`• ${goal}`, contentWidth);
+    ensureSpace(lines.length * lineHeight + 2);
+    doc.text(lines, margin, yPos);
+    yPos += lines.length * lineHeight + 2;
   });
   yPos += 10;
 
   // --- Materials ---
-  const materialHeaderHeight = 10;
-  const materialLineHeight = 6;
-  const materialsHeight = materialHeaderHeight + (offer.materials.length * materialLineHeight) + 10;
-  
-  if (yPos + materialsHeight > pageHeight - margin) {
-      doc.addPage();
-      yPos = margin;
-  }
+  const materialLines = offer.materials.map(
+    (mat) => `• ${mat.item}${mat.amount ? ` (${mat.amount})` : ''}`,
+  );
+  const materialWrapped = materialLines.map((line) => doc.splitTextToSize(line, contentWidth - 10));
+  const materialBodyHeight = materialWrapped.reduce((sum, lines) => sum + lines.length * lineHeight, 0);
+  const materialsHeight = 18 + materialBodyHeight + 8;
+
+  ensureSpace(materialsHeight);
 
   doc.setFillColor(255, 247, 237); // Orange-50
   doc.roundedRect(margin, yPos, contentWidth, materialsHeight, 3, 3, 'F');
-  
+
   let matY = yPos + 10;
   doc.setFontSize(14);
   doc.setTextColor(154, 52, 18); // Orange-800
@@ -137,32 +148,43 @@ const generateStandardPDFDoc = (offer: OfferData): jsPDF => {
   doc.setFontSize(11);
   doc.setTextColor(55, 65, 81); // Gray-700
   doc.setFont("helvetica", "normal");
-  offer.materials.forEach(mat => {
-      const text = `• ${mat.item} ${mat.amount ? `(${mat.amount})` : ''}`;
-      doc.text(text, margin + 5, matY);
-      matY += 6;
+  materialWrapped.forEach((lines) => {
+    doc.text(lines, margin + 5, matY);
+    matY += lines.length * lineHeight;
   });
   yPos += materialsHeight + 15;
 
   // --- Preparation ---
+  const prepItems = preparationItemsForList(offer.preparation);
+  const prepWrapped = prepItems.map((item, idx) =>
+    doc.splitTextToSize(`${idx + 1}. ${item}`, contentWidth),
+  );
+  const prepBodyHeight = prepWrapped.reduce((sum, lines) => sum + lines.length * lineHeight + 3, 0);
+  const prepTotalHeight = 8 + prepBodyHeight + 7;
+
+  // Passt die Vorbereitung nicht mehr hierher, auf einer leeren Seite aber schon:
+  // dann komplett umbrechen, statt sie mitten in der Liste zu zerschneiden.
+  if (yPos + prepTotalHeight > pageHeight - margin && prepTotalHeight <= pageHeight - 2 * margin) {
+    doc.addPage();
+    yPos = margin;
+  }
+
   doc.setFontSize(14);
   doc.setTextColor(31, 41, 55);
   doc.setFont("helvetica", "bold");
+  ensureSpace(16);
   doc.text("Vorbereitung", margin, yPos);
   yPos += 8;
 
   doc.setFontSize(11);
   doc.setTextColor(55, 65, 81);
   doc.setFont("helvetica", "normal");
-  const prepItems = preparationItemsForList(offer.preparation);
-  prepItems.forEach((item, idx) => {
-    const bullet = `${idx + 1}. ${item}`;
-    const lines = doc.splitTextToSize(bullet, contentWidth);
+  prepWrapped.forEach((lines) => {
+    ensureSpace(lines.length * lineHeight + 3);
     doc.text(lines, margin, yPos);
-    yPos += lines.length * 6 + 3;
+    yPos += lines.length * lineHeight + 3;
   });
   yPos += 7;
-
 
   // --- Execution (Durchführung) - ALWAYS NEW PAGE ---
   doc.addPage();
@@ -189,7 +211,7 @@ const generateStandardPDFDoc = (offer: OfferData): jsPDF => {
 
       let imgHeight = 0;
       let imgWidth = 0;
-      let renderWidth = 100;
+      let renderWidth = 72; // so passen in der Regel zwei Schritte auf eine Seite
       let renderHeight = 0;
 
       if (step.imageUrl) {
@@ -231,7 +253,8 @@ const generateStandardPDFDoc = (offer: OfferData): jsPDF => {
       // Image
       if (step.imageUrl) {
           try {
-             doc.addImage(step.imageUrl, 'PNG', margin, yPos, renderWidth, renderHeight);
+             const imgFormat = step.imageUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+             doc.addImage(step.imageUrl, imgFormat, margin, yPos, renderWidth, renderHeight);
              yPos += renderHeight + 10;
           } catch (e) {
               console.warn("Image add failed", e);
