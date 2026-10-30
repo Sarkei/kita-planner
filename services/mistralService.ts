@@ -90,6 +90,45 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
+/** Mistral liefert Bilder als signierte URL (Blob-Storage) statt als Datei-ID. */
+function collectImageUrls(node: unknown, out: Set<string>, depth = 0): void {
+  if (depth > 8 || node == null) return;
+  if (typeof node === 'string') {
+    const treffer = node.match(/https:\/\/[^\s)"']+\.(?:jpe?g|png|webp)(?:\?[^\s)"']*)?/gi);
+    if (treffer) for (const t of treffer) out.add(t);
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const x of node) collectImageUrls(x, out, depth + 1);
+    return;
+  }
+  if (typeof node === 'object') {
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      if ((k === 'url' || k === 'image_url') && typeof v === 'string' && v.startsWith('https://')) {
+        out.add(v);
+      }
+      collectImageUrls(v, out, depth + 1);
+    }
+  }
+}
+
+/** Lädt das Bild über den eigenen Server (die Blob-URL ist signiert, CORS-untauglich). */
+async function fetchImageUrlAsDataUrl(url: string): Promise<string | null> {
+  try {
+    const resp = await fetch(`${AI_BASE}/image?url=${encodeURIComponent(url)}`);
+    if (!resp.ok) {
+      console.warn('Bildabruf über Proxy fehlgeschlagen', resp.status);
+      return null;
+    }
+    const buf = await resp.arrayBuffer();
+    const ct = resp.headers.get('content-type') || 'image/jpeg';
+    return `data:${ct};base64,${arrayBufferToBase64(buf)}`;
+  } catch (e) {
+    console.warn('Bildabruf fehlgeschlagen', e);
+    return null;
+  }
+}
+
 async function downloadMistralFileAsDataUrl(fileId: string): Promise<string | null> {
   const resp = await fetch(`${AI_BASE}/files/${encodeURIComponent(fileId)}/content`);
   if (!resp.ok) {
@@ -370,6 +409,15 @@ export const generateIllustration = async (
       for (const fileId of ids) {
         const url = await downloadMistralFileAsDataUrl(fileId);
         if (url) return url;
+      }
+
+      // Aktueller API-Stand: Bild kommt als signierte URL zurück.
+      const bildUrls = new Set<string>();
+      collectImageUrls(data.outputs, bildUrls);
+      collectImageUrls(data, bildUrls);
+      for (const url of bildUrls) {
+        const dataUrl = await fetchImageUrlAsDataUrl(url);
+        if (dataUrl) return dataUrl;
       }
 
       console.warn(`Bildversuch ${attempt}: no tool_file/file_id in response`, data);

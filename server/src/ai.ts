@@ -166,6 +166,66 @@ aiRouter.post('/conversations', (req: Request, res: Response) => {
   });
 });
 
+
+/** Mistral liefert Bilder inzwischen als signierte URL, nicht mehr als Datei-ID. */
+const IMAGE_HOSTS = [
+  'mistralaiblackforestprod.blob.core.windows.net',
+  'files.mistral.ai',
+  'cdn.mistral.ai',
+];
+
+aiRouter.get('/image', async (req: Request, res: Response) => {
+  if (!MI_KEY) {
+    res.status(503).json({ error: 'Bildabruf braucht einen Mistral-Schlüssel.' });
+    return;
+  }
+  if (!limit(req, res)) return;
+
+  let target: URL;
+  try {
+    target = new URL(String(req.query.url || ''));
+  } catch {
+    res.status(400).json({ error: 'Ungültige Bild-URL' });
+    return;
+  }
+  const erlaubt = target.protocol === 'https:'
+    && IMAGE_HOSTS.some((h) => target.hostname === h || target.hostname.endsWith(`.${h}`));
+  if (!erlaubt) {
+    res.status(400).json({ error: 'Diese Bild-Adresse ist nicht erlaubt' });
+    return;
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60_000);
+  try {
+    const img = await fetch(target, { signal: controller.signal });
+    if (!img.ok) {
+      res.status(502).json({ error: `Bildabruf fehlgeschlagen: ${img.status}` });
+      return;
+    }
+    const buf = Buffer.from(await img.arrayBuffer());
+    if (buf.length > 25 * 1024 * 1024) {
+      res.status(413).json({ error: 'Bild zu groß' });
+      return;
+    }
+    // Azure liefert oft application/octet-stream — Browsern reicht das nicht für <img>.
+    let type = img.headers.get('content-type') || '';
+    if (!type.startsWith('image/')) {
+      if (buf[0] === 0xff && buf[1] === 0xd8) type = 'image/jpeg';
+      else if (buf.subarray(0, 4).toString('hex') === '89504e47') type = 'image/png';
+      else if (buf.subarray(0, 4).toString('ascii') === 'RIFF') type = 'image/webp';
+      else type = 'image/jpeg';
+    }
+    res.status(200).type(type).send(buf);
+  } catch (err) {
+    const aborted = err instanceof Error && err.name === 'AbortError';
+    console.error('[ai] Bildabruf', aborted ? 'Timeout' : err);
+    res.status(aborted ? 504 : 502).json({ error: 'Bild konnte nicht geladen werden' });
+  } finally {
+    clearTimeout(timer);
+  }
+});
+
 aiRouter.get('/files/:id/content', (req: Request, res: Response) => {
   if (!MI_KEY) {
     res.status(503).json({ error: 'Dateien liegen bei Mistral — kein Mistral-Schlüssel gesetzt.' });
