@@ -3,8 +3,8 @@ import { normalizeAiPreparation } from '../utils/preparationFormat';
 import { API_BASE } from './api';
 
 /**
- * Alle KI-Aufrufe laufen über den eigenen Server (`/api/ai/*`). Der Mistral-Schlüssel
- * liegt ausschließlich im Container — im Browser ist er weder sichtbar noch nutzbar.
+ * Alle KI-Aufrufe laufen über den eigenen Server (`/api/ai/*`). Die KI-Schlüssel
+ * liegen ausschließlich im Container — im Browser ist er weder sichtbar noch nutzbar.
  * Die Modellnamen setzt der Server aus seiner Umgebung.
  */
 const AI_BASE = `${API_BASE}/ai`;
@@ -30,9 +30,9 @@ export async function refreshAiStatus(): Promise<boolean> {
   return aiReady;
 }
 
-type MistralChatMsg = { role: string; content: string };
+type ChatMsg = { role: string; content: string };
 
-async function mistralChatJson(messages: MistralChatMsg[]): Promise<{ text: string; totalTokens: number }> {
+async function chatJson(messages: ChatMsg[]): Promise<{ text: string; totalTokens: number }> {
   const resp = await fetch(`${AI_BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -46,7 +46,7 @@ async function mistralChatJson(messages: MistralChatMsg[]): Promise<{ text: stri
 
   if (!resp.ok) {
     const txt = await resp.text();
-    throw new Error(`Mistral error ${resp.status}: ${txt}`);
+    throw new Error(`KI-Fehler ${resp.status}: ${txt}`);
   }
 
   const data = (await resp.json()) as {
@@ -93,7 +93,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 async function downloadMistralFileAsDataUrl(fileId: string): Promise<string | null> {
   const resp = await fetch(`${AI_BASE}/files/${encodeURIComponent(fileId)}/content`);
   if (!resp.ok) {
-    console.error('Mistral file download failed', resp.status, await resp.text());
+    console.error('Datei-Download fehlgeschlagen', resp.status, await resp.text());
     return null;
   }
   const buf = await resp.arrayBuffer();
@@ -137,16 +137,16 @@ function digErrorMessage(v: unknown, depth = 0): string | null {
 export function describeGenerationError(err: unknown): string {
   const raw = digErrorMessage(err, 0);
   const base =
-    raw || (typeof err === 'string' ? err : 'Unbekannter Fehler bei der Mistral-Anfrage.');
+    raw || (typeof err === 'string' ? err : 'Unbekannter Fehler bei der KI-Anfrage.');
   const hintParts: string[] = [];
   if (/MISTRAL_API_KEY|API[_-]?key|API key|401|403|invalid|unauthori|forbidden|leaked|blocked/i.test(base)) {
     hintParts.push(
-      'API-Schlüssel in der Mistral-Konsole prüfen (https://console.mistral.ai/) — Berechtigung und Guthaben.',
+      'Schlüssel und Guthaben beim KI-Anbieter prüfen (DeepSeek bzw. Mistral).',
     );
   }
   if (/not found|NOT_FOUND|unsupported|404|model|unknown model/i.test(base)) {
     hintParts.push(
-      'Modell prüfen: MISTRAL_TEXT_MODEL bzw. MISTRAL_IMAGE_CONVERSATION_MODEL in der .env des Servers, danach Container neu starten.',
+      'Modell prüfen: DEEPSEEK_TEXT_MODEL bzw. MISTRAL_IMAGE_CONVERSATION_MODEL in der .env des Servers, danach Container neu starten.',
     );
   }
   if (/quota|429|rate|limit|too many/i.test(base)) {
@@ -196,7 +196,7 @@ const incrementUsage = (tokenCount: number = 0) => {
 export const generateOfferText = async (input: OfferInput): Promise<Partial<OfferData>> => {
   if (!isMistralConfigured()) {
     throw new Error(
-      'Der Server hat keinen Mistral-Schlüssel: in der .env des Servers MISTRAL_API_KEY setzen und den Container neu starten.',
+      'Der Server hat keinen Schlüssel für die Textgenerierung: in der .env DEEPSEEK_API_KEY (oder MISTRAL_API_KEY) setzen und den Container neu starten.',
     );
   }
 
@@ -231,7 +231,7 @@ Antwortformat: NUR ein JSON-Objekt (ohne Markdown), exakt mit diesen Keys:
 - scenes: Array von Objekten mit sceneNumber (number), imagePrompt (string), storyText (string)
 `.trim();
 
-    const messages: MistralChatMsg[] = [
+    const messages: ChatMsg[] = [
       {
         role: 'system',
         content:
@@ -242,7 +242,7 @@ Antwortformat: NUR ein JSON-Objekt (ohne Markdown), exakt mit diesen Keys:
 
     let textOut: string;
     try {
-      const r = await mistralChatJson(messages);
+      const r = await chatJson(messages);
       textOut = r.text;
       incrementUsage(r.totalTokens);
     } catch (e) {
@@ -289,7 +289,7 @@ Antwortformat: NUR ein JSON-Objekt (ohne Markdown), exakt mit diesen Keys:
 - steps: Array von { step: number, instruction: string, imagePrompt: string }
 `.trim();
 
-  const messages: MistralChatMsg[] = [
+  const messages: ChatMsg[] = [
     {
       role: 'system',
       content:
@@ -300,7 +300,7 @@ Antwortformat: NUR ein JSON-Objekt (ohne Markdown), exakt mit diesen Keys:
 
   let textOut: string;
   try {
-    const r = await mistralChatJson(messages);
+    const r = await chatJson(messages);
     textOut = r.text;
     incrementUsage(r.totalTokens);
   } catch (e) {
@@ -372,9 +372,9 @@ export const generateIllustration = async (
         if (url) return url;
       }
 
-      console.warn(`Mistral image: attempt ${attempt}: no tool_file/file_id in response`, data);
+      console.warn(`Bildversuch ${attempt}: no tool_file/file_id in response`, data);
     } catch (error) {
-      console.error(`Mistral image generation failed (attempt ${attempt}/${maxRetries}):`, error);
+      console.error(`Bildgenerierung fehlgeschlagen (attempt ${attempt}/${maxRetries}):`, error);
       if (attempt === maxRetries) return null;
       const delay = 1000 * Math.pow(2, attempt - 1);
       await new Promise((resolve) => setTimeout(resolve, delay));
