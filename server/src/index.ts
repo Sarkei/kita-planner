@@ -5,7 +5,7 @@ import cors from 'cors';
 import { connectDatabase, query, logPoolTarget } from './db';
 import { seasonPeriodFromOfferData } from './seasonLabel';
 import { buildOfferFilters } from './offersFilter';
-import { mistralRouter } from './mistral';
+import { aiRouter } from './ai';
 
 const webRoot = (process.env.KITAPL_WEB_ROOT || process.env.STATIC_ROOT || '').trim();
 const port: number = (() => {
@@ -32,9 +32,9 @@ app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 /**
  * KI-Proxy: eigener Body-Limit, weil hier nur Text und kleine Steuerdaten laufen.
- * Der Mistral-Schlüssel bleibt ausschließlich im Container.
+ * Die Schlüssel bleiben ausschließlich im Container.
  */
-app.use('/api/ai', express.json({ limit: '2mb' }), mistralRouter);
+app.use('/api/ai', express.json({ limit: '2mb' }), aiRouter);
 
 app.get('/api/health', (_req: Request, res: Response) => {
   /** Sobald der Server antwortet, ist die DB verbunden (connectDatabase vor listen). */
