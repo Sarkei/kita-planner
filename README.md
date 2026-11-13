@@ -35,6 +35,25 @@ lassen sich in einer Bibliothek durchsuchen und als PDF exportieren.
 - Modus „KI-Suche“: bis zu 52 Kandidaten werden geladen, per Mistral bewertet und nach Relevanz sortiert.
 - Löschen mit Bestätigungsdialog; dunkles Theme als Standard (`localStorage: theme`); Tageszähler für API-Aufrufe (Limit 1500) im Header.
 
+## Demo-Zugang
+
+Eine `demo-…`-Domain (oder `?demo=1`) startet die App ohne Anmeldung mit Beispieldaten.
+
+- `GET`/`POST /api/auth/demo` legt eine Sitzung an und liefert `{ token, user }` für das
+  Demo-Konto (`demo@example.com`, Name `Max Muster`).
+- Der Client (`index.tsx`) erkennt `hostname.startsWith('demo-')` bzw. `?demo=1`, holt beim
+  Start einmalig den Token, legt ihn in `localStorage` (`kitapl_demo_token`) und entfernt den
+  Query-Parameter aus der Adresse. Jeder API-Aufruf schickt ihn als `X-Demo-Token`.
+- `GET /api/auth/me` prüft den Token (401 ohne gültige Sitzung).
+- Demo-Daten hängen an `offers.owner_email`: Demo-Zeilen tragen `demo@example.com`, die echte
+  Instanz nutzt `NULL`. Ohne Token sind Demo-Zeilen unsichtbar, mit Token ist nur der
+  Demo-Ausschnitt sichtbar — Anlegen, Überschreiben (409) und Löschen (404) bleiben getrennt.
+- Start legt Schema, Konto und acht Beispiel-Angebote idempotent an (`server/src/demo.ts`);
+  jeder Demo-Login füllt gelöschte Beispiele wieder auf. Beispielinhalte: Kita „Regenbogen“,
+  Gruppen Sonnenkäfer/Marienkäfer/Schlaufüchse, Kinder und Team mit Dummy-Namen.
+- Eine Registrierung gibt es in der App nicht; im Demo-Modus erscheinen stattdessen Badge und
+  Hinweisbanner, damit niemand echte Daten erwartet.
+
 ## Technik
 
 | Schicht | Umsetzung |

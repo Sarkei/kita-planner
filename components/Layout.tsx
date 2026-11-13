@@ -8,9 +8,11 @@ interface LayoutProps {
   toggleTheme: () => void;
   apiUsage?: { count: number, tokens: number };
   apiLimit?: number;
+  /** Gesetzt im Demo-Betrieb: zeigt Badge mit Demo-Konto. */
+  demoName?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleTheme, apiUsage = { count: 0, tokens: 0 }, apiLimit = 1500 }) => {
+const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleTheme, apiUsage = { count: 0, tokens: 0 }, apiLimit = 1500, demoName }) => {
   const location = useLocation();
 
   const NavTab = ({ to, icon: Icon, label }: { to: string, icon: any, label: string }) => {
@@ -41,6 +43,11 @@ const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleTheme, apiU
              </div>
              <div>
                  <h1 className="text-lg md:text-xl font-bold font-hand tracking-tight leading-none">Kita-Planer</h1>
+                 {demoName && (
+                   <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+                     Demo · {demoName}
+                   </span>
+                 )}
              </div>
          </div>
          

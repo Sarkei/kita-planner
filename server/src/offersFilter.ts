@@ -1,10 +1,26 @@
 import type { Request } from 'express';
 import { buildSeasonPeriodSql } from './seasonLabel';
 
-export function buildOfferFilters(req: Request): { whereSql: string; params: unknown[] } {
+/**
+ * Filter der Bibliothek. `ownerEmail` ist gesetzt, wenn ein gültiger Demo-Token
+ * mitgeschickt wurde; dann sieht der Aufrufer ausschließlich Demo-Zeilen.
+ * Ohne Token bleiben Demo-Zeilen unsichtbar (`owner_email IS NULL` = echte Instanz).
+ */
+export function buildOfferFilters(
+  req: Request,
+  ownerEmail: string | null = null,
+): { whereSql: string; params: unknown[] } {
   const conditions: string[] = [];
   const params: unknown[] = [];
   let i = 1;
+
+  if (ownerEmail) {
+    conditions.push(`owner_email = $${i}`);
+    params.push(ownerEmail);
+    i++;
+  } else {
+    conditions.push('owner_email IS NULL');
+  }
 
   const q = String(req.query.q || '').trim();
   if (q) {
@@ -31,6 +47,6 @@ export function buildOfferFilters(req: Request): { whereSql: string; params: unk
     }
   }
 
-  const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereSql = `WHERE ${conditions.join(' AND ')}`;
   return { whereSql, params };
 }

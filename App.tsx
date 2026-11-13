@@ -7,7 +7,7 @@ import Library from './components/Library';
 import { ConfirmProvider } from './components/Confirm';
 import { ToastProvider, useToasts } from './src/components/Toasts';
 import { generateOfferText, generateIllustration, getApiUsage, API_DAILY_LIMIT, describeGenerationError, refreshAiStatus } from './services/mistralService';
-import { api } from './services/api';
+import { api, getDemoUser, isDemoMode } from './services/api';
 import { OfferInput, OfferData, SavedOffer, OfferCategory } from './types';
 
 import { Loader2, Sparkles, Wand2, X, Save } from 'lucide-react';
@@ -330,9 +330,24 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
   };
 
   return (
-    <Layout isDarkMode={isDarkMode} toggleTheme={toggleTheme} apiUsage={apiUsage} apiLimit={API_DAILY_LIMIT}>
+    <Layout
+      isDarkMode={isDarkMode}
+      toggleTheme={toggleTheme}
+      apiUsage={apiUsage}
+      apiLimit={API_DAILY_LIMIT}
+      demoName={isDemoMode() ? getDemoUser()?.name : undefined}
+    >
       <GenerationModal isOpen={isGenerating} progress={generationProgress} onCancel={handleCancelGeneration} />
       <SavingModal isOpen={isSaving} progress={saveProgress} onCancel={handleCancelSave} />
+      {isDemoMode() && (
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <span className="mt-0.5 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Demo</span>
+          <p className="leading-relaxed">
+            Du siehst die Kita-Planer-Demo mit Beispieldaten von {getDemoUser()?.name ?? 'Max Muster'}.
+            Alles, was du anlegst oder löschst, betrifft nur die Demo — eine Registrierung ist nicht nötig.
+          </p>
+        </div>
+      )}
       <Routes>
         <Route path="/" element={
             <OfferForm onSubmit={handleGenerate} isGenerating={isGenerating} />

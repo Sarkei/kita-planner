@@ -7,6 +7,90 @@ const API_URL = (raw?.replace(/\/$/, '') || '/api') as string;
 /** Basis für alle API-Aufrufe — auch der KI-Proxy hängt hierunter. */
 export const API_BASE = API_URL;
 
+/* ------------------------------------------------------------------ *
+ * Demo-Zugang
+ * Ein Demo-Token (X-Demo-Token) schaltet den Demo-Datenausschnitt frei.
+ * Die App kennt sonst keine Anmeldung; der Token liegt nur im Browser.
+ * ------------------------------------------------------------------ */
+
+const TOKEN_KEY = 'kitapl_demo_token';
+const USER_KEY = 'kitapl_demo_user';
+
+export type DemoUser = { id?: number; email: string; name: string };
+
+export function getDemoToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getDemoUser(): DemoUser | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DemoUser;
+    return parsed && typeof parsed.email === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function setDemoSession(token: string, user: DemoUser | null): void {
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch {
+    /* Privater Modus ohne localStorage: Demo läuft dann ohne Persistenz. */
+  }
+}
+
+export function clearDemoSession(): void {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  } catch {
+    /* ignorieren */
+  }
+}
+
+/** Eigene Demo-Domain (`demo-…`) oder `?demo=1` starten den anonymen Zugang. */
+export function isDemoEntry(): boolean {
+  return (
+    window.location.hostname.startsWith('demo-') ||
+    new URLSearchParams(window.location.search).get('demo') === '1'
+  );
+}
+
+export function isDemoMode(): boolean {
+  return getDemoUser() !== null;
+}
+
+/** Holt ein Demo-Token vom Server und merkt es sich. */
+export async function startDemoSession(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/auth/demo`, { method: 'GET' });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { token?: string; user?: { name?: string; displayName?: string; email?: string; id?: number } };
+    if (!data?.token) return false;
+    setDemoSession(data.token, {
+      id: data.user?.id,
+      email: data.user?.email || 'demo@example.com',
+      name: data.user?.name || data.user?.displayName || 'Max Muster',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function demoHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token = getDemoToken();
+  return token ? { ...extra, 'X-Demo-Token': token } : extra;
+}
+
+
 /** Während Container-Start: kurze 503-Retries (Backend sollte keinen Dauer-503 mehr senden). */
 const SOFT_RETRY_MAX = 10;
 const SOFT_RETRY_DELAY_MS = 400;
@@ -73,7 +157,7 @@ export type OffersMeta = { total: number; periods: string[] };
 export const api = {
   getOffersMeta: async (): Promise<OffersMeta> => {
     if (metaCache && Date.now() - metaCache.ts < META_TTL_MS) return metaCache.data;
-    const response = await fetchUntilReady(`${API_URL}/offers/meta`);
+    const response = await fetchUntilReady(`${API_URL}/offers/meta`, { headers: demoHeaders() });
     const data = (await parseJsonOrThrow(response, 'offers meta')) as OffersMeta;
     metaCache = { data, ts: Date.now() };
     return data;
@@ -97,7 +181,9 @@ export const api = {
     if (opts.category && opts.category !== 'all') params.set('category', opts.category);
     if (opts.period && opts.period !== 'all') params.set('period', opts.period);
 
-    const response = await fetchUntilReady(`${API_URL}/offers?${params.toString()}`);
+    const response = await fetchUntilReady(`${API_URL}/offers?${params.toString()}`, {
+      headers: demoHeaders(),
+    });
     return (await parseJsonOrThrow(response, 'offers')) as {
       offers: SavedOffer[];
       total: number;
@@ -109,9 +195,9 @@ export const api = {
   saveOffer: async (offer: SavedOffer, signal?: AbortSignal): Promise<SavedOffer> => {
     const response = await fetchUntilReady(`${API_URL}/offers`, {
       method: 'POST',
-      headers: {
+      headers: demoHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(offer),
       signal,
     });
@@ -127,6 +213,7 @@ export const api = {
   deleteOffer: async (id: string): Promise<void> => {
     const response = await fetchUntilReady(`${API_URL}/offers/${id}`, {
       method: 'DELETE',
+      headers: demoHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete offer');
     api.invalidateMetaCache();
