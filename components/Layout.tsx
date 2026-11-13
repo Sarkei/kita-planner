@@ -113,12 +113,6 @@ const Layout: React.FC<LayoutProps> = ({
 
       <main className="app-main">{children}</main>
 
-      <footer className="app-footer">
-        <div className="app-container app-footer__inner">
-          <span>Kita-Planer — pädagogische Angebote, Material und Ablauf.</span>
-          <span>Bibliothek, Kamishibai-Illustrationen und PDF-Export.</span>
-        </div>
-      </footer>
     </div>
   );
 };
