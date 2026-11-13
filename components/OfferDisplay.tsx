@@ -174,7 +174,7 @@ const OfferDisplay: React.FC<OfferDisplayProps> = ({ offer, onUpdate, isAutoGene
                  </div>
              ) : (
                 <div className="group flex items-start gap-3 mb-4">
-                    <h1 className="text-3xl md:text-4xl font-bold text-ink leading-tight">{offer.title}</h1>
+                    <h1 className="font-serif text-3xl md:text-4xl tracking-tight text-ink leading-tight">{offer.title}</h1>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity pt-2">
                         <EditBtn onClick={() => startEditing('title', offer.title)} />
                     </div>

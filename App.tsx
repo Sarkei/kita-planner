@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
 import OfferForm from './components/OfferForm';
 import OfferDisplay from './components/OfferDisplay';
 import Library from './components/Library';
@@ -340,24 +341,41 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
       <GenerationModal isOpen={isGenerating} progress={generationProgress} onCancel={handleCancelGeneration} />
       <SavingModal isOpen={isSaving} progress={saveProgress} onCancel={handleCancelSave} />
       {isDemoMode() && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-warn">
-          <span className="mt-0.5 rounded-full bg-warn px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-on-accent">Demo</span>
-          <p className="leading-relaxed">
-            Du siehst die Kita-Planer-Demo mit Beispieldaten von {getDemoUser()?.name ?? 'Max Muster'}.
-            Alles, was du anlegst oder löschst, betrifft nur die Demo — eine Registrierung ist nicht nötig.
-          </p>
+        <div className="app-container pt-6">
+          <div className="flex items-start gap-3 rounded-2xl border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-warn">
+            <span className="mt-0.5 rounded-full bg-warn px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-on-accent">Demo</span>
+            <p className="leading-relaxed">
+              Du siehst die Kita-Planer-Demo mit Beispieldaten von {getDemoUser()?.name ?? 'Max Muster'}.
+              Alles, was du anlegst oder löschst, betrifft nur die Demo — eine Registrierung ist nicht nötig.
+            </p>
+          </div>
         </div>
       )}
       <Routes>
         <Route path="/" element={
-            <OfferForm onSubmit={handleGenerate} isGenerating={isGenerating} />
+          <Dashboard apiUsage={apiUsage} apiLimit={API_DAILY_LIMIT} onOpenOffer={handleSelectFromLibrary} />
+        } />
+
+        <Route path="/neu" element={
+          <>
+            <header className="app-container app-hero">
+              <p className="app-badge">Generator</p>
+              <h1 className="app-title">Neues Angebot</h1>
+              <p className="app-lede">
+                Thema, Kategorie und Zielgruppe wählen — die KI schreibt das pädagogische Konzept.
+              </p>
+            </header>
+            <div className="app-container app-page">
+              <OfferForm onSubmit={handleGenerate} isGenerating={isGenerating} />
+            </div>
+          </>
         } />
         
         <Route path="/angebot" element={
             currentOffer ? (
-              <div className="relative animate-fade-in">
+              <div className="app-container app-page relative animate-fade-in">
                 <button 
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/neu')}
                     className="mb-6 text-sm font-medium text-muted hover:text-accent flex items-center gap-2 transition-colors"
                 >
                     ← Zurück zum Formular
@@ -371,16 +389,27 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
                 />
               </div>
             ) : (
-                <div className="text-center py-20 text-muted">
-                    Kein Angebot ausgewählt. <button onClick={() => navigate('/')} className="text-accent underline hover:text-accent-hover">Neues erstellen</button>
+                <div className="app-container app-page text-center text-muted">
+                    Kein Angebot ausgewählt. <button onClick={() => navigate('/neu')} className="text-accent underline hover:text-accent-hover">Neues erstellen</button>
                 </div>
             )
         } />
         
         <Route path="/bibliothek" element={
-          <Library 
-            onSelect={handleSelectFromLibrary} 
-          />
+          <>
+            <header className="app-container app-hero">
+              <p className="app-badge">Sammlung</p>
+              <h1 className="app-title">Bibliothek</h1>
+              <p className="app-lede">
+                Alle gespeicherten Angebote an einem Ort — durchsuchbar, filterbar, jederzeit wieder zu öffnen.
+              </p>
+            </header>
+            <div className="app-container app-page">
+              <Library 
+                onSelect={handleSelectFromLibrary} 
+              />
+            </div>
+          </>
         } />
       </Routes>
     </Layout>
@@ -388,16 +417,10 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
 };
 
 const App = () => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme) {
-      setIsDarkMode(storedTheme === 'dark');
-    } else {
-      setIsDarkMode(true); // Default to dark
-    }
-  }, []);
+  /** Startwert kommt aus dem Inline-Skript in index.html (kein Aufblitzen). */
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => document.documentElement.classList.contains('dark')
+  );
 
   useEffect(() => {
     if (isDarkMode) {

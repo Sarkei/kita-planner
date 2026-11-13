@@ -274,9 +274,9 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
 
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-ink">Bibliothek</h2>
-          <p className="text-muted mt-1">
-            Deine Sammlung ({totalInCollection} {totalInCollection === 1 ? 'Angebot' : 'Angebote'})
+          <h2 className="app-section__title">Deine Sammlung</h2>
+          <p className="app-section__note mt-1">
+            {totalInCollection} {totalInCollection === 1 ? 'Angebot' : 'Angebote'} gespeichert
             {debouncedSearch.trim() || selectedCategory !== 'all' || selectedPeriod !== 'all' || semanticMode
               ? ` · Treffer: ${matchTotal}`
               : ''}
@@ -378,9 +378,8 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
         {visibleOffers.map((offer) => (
           <div
             key={offer.id}
-            className="bg-surface rounded-2xl shadow-sm border border-line overflow-hidden transition-all duration-300 group flex flex-col hover:border-accent/40"
+            className="bg-surface rounded-2xl border border-line overflow-hidden transition-all duration-300 group flex flex-col hover:border-accent/40"
           >
-            <div className="h-2 bg-accent/50" />
             <div className="p-6 flex-1 flex flex-col">
               <div className="flex justify-between items-start mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-accent-ink bg-accent-soft px-2 py-1 rounded border border-accent/25">
@@ -401,7 +400,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-ink mb-3 line-clamp-2 flex-1 leading-tight">
+              <h3 className="font-serif text-xl text-ink mb-3 line-clamp-2 flex-1 leading-tight">
                 {offer.title}
               </h3>
 

@@ -36,11 +36,11 @@ const OfferForm: React.FC<OfferFormProps> = ({ onSubmit, isGenerating }) => {
   };
 
   return (
-    <div className="bg-surface rounded-2xl shadow-card border border-line p-6 md:p-10 relative overflow-hidden transition-colors">
+    <div className="bg-surface rounded-2xl border border-line p-6 md:p-10 relative overflow-hidden transition-colors">
       
       <div className="relative z-10 mb-8">
-        <h2 className="text-3xl font-bold text-ink mb-2">Neues Angebot</h2>
-        <p className="text-muted">Lass die KI ein kreatives pädagogisches Konzept erstellen.</p>
+        <p className="app-label">Eingabe</p>
+        <p className="mt-2 text-muted">Lass die KI ein kreatives pädagogisches Konzept erstellen.</p>
       </div>
       
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-8 relative z-10">
