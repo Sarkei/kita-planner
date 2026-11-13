@@ -425,7 +425,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
               <button
                 type="button"
                 onClick={() => onSelect(offer)}
-                className="w-full py-3 bg-surface-2 text-ink font-semibold rounded-xl border border-accent group-hover:border-accent group-hover:bg-accent group-hover:text-on-accent transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 btn-outline font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Eye size={18} /> Ansehen
               </button>
