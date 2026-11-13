@@ -17,35 +17,35 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 const SavingModal = ({ isOpen, progress, onCancel }: { isOpen: boolean, progress: number, onCancel: () => void }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300 animate-fade-in">
-      <div className="bg-white dark:bg-slate-800 p-8 md:p-10 rounded-3xl shadow-2xl max-w-sm w-full mx-4 text-center relative overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md transition-all duration-300 animate-fade-in">
+      <div className="bg-surface p-8 md:p-10 rounded-2xl shadow-card max-w-sm w-full mx-4 text-center relative overflow-hidden border border-line">
         
         {/* Background decoration */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-accent"></div>
         
         <div className="relative z-10 flex flex-col items-center">
-            <div className="w-20 h-20 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-6 text-green-500 relative group">
-                <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping opacity-20"></div>
+            <div className="w-20 h-20 bg-success-soft rounded-full flex items-center justify-center mb-6 text-success relative group">
+                <div className="absolute inset-0 bg-success/20 rounded-full animate-ping opacity-20"></div>
                 <Save size={36} className="animate-pulse" />
             </div>
             
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">Speichere Angebot</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-8 text-base leading-relaxed font-medium">
+            <h3 className="text-2xl font-bold text-ink mb-3">Speichere Angebot</h3>
+            <p className="text-muted mb-8 text-base leading-relaxed font-medium">
                 Das Angebot wird in deiner Bibliothek gesichert...
             </p>
 
             {/* Progress Bar */}
-            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden relative">
+            <div className="w-full bg-surface-2 rounded-full h-4 overflow-hidden relative">
                 <div 
-                    className="bg-gradient-to-r from-green-400 to-teal-500 h-full transition-all duration-300 ease-out rounded-full"
+                    className="bg-accent-hover h-full transition-all duration-300 ease-out rounded-full"
                     style={{ width: `${progress}%` }}
                 ></div>
             </div>
-            <p className="text-xs text-slate-400 mt-2">{Math.round(progress)}%</p>
+            <p className="text-xs text-muted mt-2">{Math.round(progress)}%</p>
             
             <button 
               onClick={onCancel}
-              className="mt-8 text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50"
+              className="mt-8 text-sm text-muted hover:text-ink font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-full hover:bg-surface-2"
             >
               <X size={16} />
               Abbrechen
@@ -59,28 +59,28 @@ const SavingModal = ({ isOpen, progress, onCancel }: { isOpen: boolean, progress
 const GenerationModal = ({ isOpen, progress, onCancel }: { isOpen: boolean, progress: string, onCancel: () => void }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md transition-all duration-300 animate-fade-in">
-      <div className="bg-white dark:bg-slate-800 p-8 md:p-10 rounded-3xl shadow-2xl max-w-sm w-full mx-4 text-center relative overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md transition-all duration-300 animate-fade-in">
+      <div className="bg-surface p-8 md:p-10 rounded-2xl shadow-card max-w-sm w-full mx-4 text-center relative overflow-hidden border border-line">
         
         {/* Background decoration */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600"></div>
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-slate-500/10 rounded-full blur-2xl"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-accent"></div>
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-surface-2 rounded-full blur-2xl"></div>
 
         <div className="relative z-10 flex flex-col items-center">
-            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-500/10 rounded-full flex items-center justify-center mb-6 text-slate-500 relative group">
-                <div className="absolute inset-0 bg-slate-500/20 rounded-full animate-ping opacity-20"></div>
-                <Sparkles className="absolute top-0 right-0 -mt-1 -mr-1 text-slate-400 animate-bounce" size={24} />
+            <div className="w-20 h-20 bg-surface-2 rounded-full flex items-center justify-center mb-6 text-muted relative group">
+                <div className="absolute inset-0 bg-line rounded-full animate-ping opacity-20"></div>
+                <Sparkles className="absolute top-0 right-0 -mt-1 -mr-1 text-muted animate-bounce" size={24} />
                 <Wand2 size={36} className="animate-pulse" />
             </div>
             
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">Zauberei im Gange</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-8 text-base leading-relaxed font-medium">
+            <h3 className="text-2xl font-bold text-ink mb-3">Zauberei im Gange</h3>
+            <p className="text-muted mb-8 text-base leading-relaxed font-medium">
                 {progress || "Die KI erstellt dein pädagogisches Konzept..."}
             </p>
 
             {/* Progress Bar */}
-            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-400 to-slate-600 w-1/2 animate-[slide_1.5s_ease-in-out_infinite] rounded-full"></div>
+            <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden relative">
+                <div className="absolute inset-0 bg-accent/60 w-1/2 animate-[slide_1.5s_ease-in-out_infinite] rounded-full"></div>
             </div>
             <style>{`
               @keyframes slide {
@@ -91,7 +91,7 @@ const GenerationModal = ({ isOpen, progress, onCancel }: { isOpen: boolean, prog
             
             <button 
               onClick={onCancel}
-              className="mt-8 text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50"
+              className="mt-8 text-sm text-muted hover:text-ink font-medium flex items-center gap-2 transition-colors px-4 py-2 rounded-full hover:bg-surface-2"
             >
               <X size={16} />
               Abbrechen
@@ -340,8 +340,8 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
       <GenerationModal isOpen={isGenerating} progress={generationProgress} onCancel={handleCancelGeneration} />
       <SavingModal isOpen={isSaving} progress={saveProgress} onCancel={handleCancelSave} />
       {isDemoMode() && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-          <span className="mt-0.5 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Demo</span>
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-warn">
+          <span className="mt-0.5 rounded-full bg-warn px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-on-accent">Demo</span>
           <p className="leading-relaxed">
             Du siehst die Kita-Planer-Demo mit Beispieldaten von {getDemoUser()?.name ?? 'Max Muster'}.
             Alles, was du anlegst oder löschst, betrifft nur die Demo — eine Registrierung ist nicht nötig.
@@ -358,7 +358,7 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
               <div className="relative animate-fade-in">
                 <button 
                     onClick={() => navigate('/')}
-                    className="mb-6 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 flex items-center gap-2 transition-colors"
+                    className="mb-6 text-sm font-medium text-muted hover:text-accent flex items-center gap-2 transition-colors"
                 >
                     ← Zurück zum Formular
                 </button>
@@ -371,8 +371,8 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
                 />
               </div>
             ) : (
-                <div className="text-center py-20 text-slate-500">
-                    Kein Angebot ausgewählt. <button onClick={() => navigate('/')} className="text-orange-500 underline hover:text-orange-600">Neues erstellen</button>
+                <div className="text-center py-20 text-muted">
+                    Kein Angebot ausgewählt. <button onClick={() => navigate('/')} className="text-accent underline hover:text-accent-hover">Neues erstellen</button>
                 </div>
             )
         } />

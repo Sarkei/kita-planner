@@ -37,7 +37,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
       <div className="fixed bottom-6 right-6 z-60 space-y-2 w-[320px] max-w-[90vw]">
         {toasts.map(t => (
-          <div key={t.id} className={`rounded-xl p-3 shadow-lg text-sm text-white flex items-start gap-3 ${t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : t.type === 'warning' ? 'bg-yellow-500 text-black' : 'bg-zinc-800'}`}>
+          <div key={t.id} className="rounded-xl border border-line bg-surface p-3 shadow-card text-sm text-ink flex items-start gap-3">
+            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${t.type === 'success' ? 'bg-success' : t.type === 'error' ? 'bg-danger' : t.type === 'warning' ? 'bg-warn' : 'bg-accent'}`} />
             <div className="flex-1">{t.message}</div>
             <button className="opacity-80 hover:opacity-100" onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))}>✕</button>
           </div>

@@ -35,12 +35,12 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
       {children}
       {queue.map(q => (
         <div key={q.id} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full border shadow-2xl">
+          <div className="bg-surface text-ink rounded-2xl p-6 max-w-md w-full border border-line shadow-card">
             {q.opts.title && <h3 className="text-lg font-bold mb-2">{q.opts.title}</h3>}
-            {q.opts.description && <p className="text-sm text-gray-600 mb-4">{q.opts.description}</p>}
+            {q.opts.description && <p className="text-sm text-muted mb-4">{q.opts.description}</p>}
             <div className="flex gap-3 justify-end">
-              <button onClick={() => close(q.id, false)} className="px-4 py-2 rounded-lg border">{q.opts.cancelText || 'Cancel'}</button>
-              <button onClick={() => close(q.id, true)} className="px-4 py-2 rounded-lg bg-blue-600 text-white">{q.opts.confirmText || 'Confirm'}</button>
+              <button onClick={() => close(q.id, false)} className="px-4 py-2 rounded-lg border border-line-strong text-ink font-medium hover:bg-surface-2 transition-colors">{q.opts.cancelText || 'Cancel'}</button>
+              <button onClick={() => close(q.id, true)} className="px-4 py-2 rounded-lg bg-accent text-on-accent font-medium hover:bg-accent-hover transition-colors">{q.opts.confirmText || 'Confirm'}</button>
             </div>
           </div>
         </div>

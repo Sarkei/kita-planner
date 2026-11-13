@@ -226,7 +226,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
   if (listLoading && visibleOffers.length === 0 && !error && !metaError) {
     return (
       <div className="flex justify-center items-center py-24">
-        <Loader2 className="animate-spin text-orange-500" size={48} />
+        <Loader2 className="animate-spin text-accent" size={48} />
       </div>
     );
   }
@@ -234,15 +234,15 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-full mb-4 text-red-500">
+        <div className="bg-danger-soft p-4 rounded-full mb-4 text-danger">
           <Trash2 size={48} />
         </div>
-        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200">Hoppla!</h3>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md">{error}</p>
+        <h3 className="text-xl font-bold text-ink">Hoppla!</h3>
+        <p className="text-muted mt-2 max-w-md">{error}</p>
         <button
           type="button"
           onClick={() => setReloadNonce((n) => n + 1)}
-          className="mt-6 px-6 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors shadow-md shadow-orange-500/20"
+          className="mt-6 px-6 py-2 bg-accent text-on-accent rounded-full hover:bg-accent-hover transition-colors shadow-sm shadow-accent/15"
         >
           Erneut versuchen
         </button>
@@ -252,12 +252,12 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
 
   if (totalInCollection === 0 && !listLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-kita-cardDark rounded-3xl border border-dashed border-slate-200 dark:border-slate-700 text-center animate-fade-in">
-        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-full mb-4">
-          <FolderOpen size={48} className="text-slate-300 dark:text-slate-600" />
+      <div className="flex flex-col items-center justify-center py-24 bg-surface rounded-2xl border border-dashed border-line text-center animate-fade-in">
+        <div className="bg-surface-2 p-4 rounded-full mb-4">
+          <FolderOpen size={48} className="text-placeholder" />
         </div>
-        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200">Noch keine Angebote gespeichert</h3>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md">
+        <h3 className="text-xl font-bold text-ink">Noch keine Angebote gespeichert</h3>
+        <p className="text-muted mt-2 max-w-md">
           Erstelle dein erstes pädagogisches Angebot im Generator — es landet automatisch in der Bibliothek.
         </p>
       </div>
@@ -267,15 +267,15 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       {metaError && (
-        <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2">
+        <p className="text-sm text-warn bg-warn-soft border border-warn/30 rounded-xl px-4 py-2">
           {metaError}
         </p>
       )}
 
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Bibliothek</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <h2 className="text-3xl font-bold text-ink">Bibliothek</h2>
+          <p className="text-muted mt-1">
             Deine Sammlung ({totalInCollection} {totalInCollection === 1 ? 'Angebot' : 'Angebote'})
             {debouncedSearch.trim() || selectedCategory !== 'all' || selectedPeriod !== 'all' || semanticMode
               ? ` · Treffer: ${matchTotal}`
@@ -289,7 +289,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-kita-cardDark border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm appearance-none cursor-pointer text-slate-700 dark:text-slate-200"
+                className="w-full pl-4 pr-10 py-2.5 rounded-xl bg-surface border border-line focus:ring-2 focus:ring-accent outline-none text-sm shadow-sm appearance-none cursor-pointer text-ink"
               >
                 <option value="all">Alle Kategorien</option>
                 {Object.values(OfferCategory).map((cat) => (
@@ -298,7 +298,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                   </option>
                 ))}
               </select>
-              <Filter className="absolute right-3 top-3 text-slate-400 pointer-events-none" size={16} />
+              <Filter className="absolute right-3 top-3 text-muted pointer-events-none" size={16} />
             </div>
 
             <div className="relative flex-1">
@@ -311,27 +311,27 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                 }
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-kita-cardDark border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm text-slate-700 dark:text-slate-200"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface border border-line focus:ring-2 focus:ring-accent outline-none text-sm shadow-sm text-ink"
               />
-              <Search className="absolute left-3 top-3 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-3 text-muted" size={16} />
               {aiLoading && (
-                <Loader2 className="absolute right-3 top-3 animate-spin text-orange-500" size={16} />
+                <Loader2 className="absolute right-3 top-3 animate-spin text-accent" size={16} />
               )}
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
             <input
               type="checkbox"
-              className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+              className="rounded border-line-strong text-accent focus:ring-accent"
               checked={semanticMode}
               disabled={!mistralReady}
               onChange={(e) => setSemanticMode(e.target.checked)}
             />
-            <Sparkles size={16} className="text-violet-500 shrink-0" />
+            <Sparkles size={16} className="text-accent shrink-0" />
             <span>
               KI-Suche (versteht Begriffe wie „Frühling“ oder „Thema Biene“){' '}
-              {!mistralReady && <span className="text-slate-400">— Mistral-API-Key fehlt</span>}
+              {!mistralReady && <span className="text-muted">— Mistral-API-Key fehlt</span>}
             </span>
           </label>
         </div>
@@ -344,8 +344,8 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
             onClick={() => setSelectedPeriod('all')}
             className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               selectedPeriod === 'all'
-                ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                ? 'bg-accent text-on-accent'
+                : 'bg-surface text-muted hover:bg-surface-2 border border-line'
             }`}
           >
             Alle Jahreszeiten
@@ -357,8 +357,8 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
               onClick={() => setSelectedPeriod(p)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedPeriod === p
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                  ? 'bg-accent text-on-accent shadow-sm shadow-accent/15'
+                  : 'bg-surface text-muted hover:bg-surface-2 border border-line'
               }`}
             >
               {p}
@@ -368,7 +368,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
       )}
 
       {visibleOffers.length === 0 && !listLoading && (
-        <div className="text-center py-12 text-slate-500">
+        <div className="text-center py-12 text-muted">
           <Filter className="mx-auto mb-2 opacity-50" size={32} />
           <p>Keine Angebote für diese Suche oder Filter.</p>
         </div>
@@ -378,12 +378,12 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
         {visibleOffers.map((offer) => (
           <div
             key={offer.id}
-            className="bg-white dark:bg-kita-cardDark rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-300 group flex flex-col hover:border-orange-300 dark:hover:border-orange-500/30"
+            className="bg-surface rounded-2xl shadow-sm border border-line overflow-hidden transition-all duration-300 group flex flex-col hover:border-accent/40"
           >
-            <div className="h-2 bg-gradient-to-r from-orange-400 to-orange-600" />
+            <div className="h-2 bg-accent/50" />
             <div className="p-6 flex-1 flex flex-col">
               <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 px-2 py-1 rounded border border-orange-100 dark:border-orange-500/20">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-accent-ink bg-accent-soft px-2 py-1 rounded border border-accent/25">
                   {offer.input?.category ?? '–'}
                 </span>
                 <div className="flex gap-1">
@@ -393,7 +393,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                       e.stopPropagation();
                       void handleDelete(offer.id);
                     }}
-                    className="text-slate-300 hover:text-red-500 transition-colors p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                    className="text-placeholder hover:text-danger transition-colors p-1.5 hover:bg-danger-soft rounded"
                     title="Löschen"
                   >
                     <Trash2 size={16} />
@@ -401,11 +401,11 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3 line-clamp-2 flex-1 leading-tight">
+              <h3 className="text-xl font-bold text-ink mb-3 line-clamp-2 flex-1 leading-tight">
                 {offer.title}
               </h3>
 
-              <div className="text-sm text-slate-500 dark:text-slate-400 space-y-2 mb-6">
+              <div className="text-sm text-muted space-y-2 mb-6">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Calendar size={14} />
                   {new Date(offer.savedAt).toLocaleDateString('de-DE', {
@@ -413,11 +413,11 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
                     month: '2-digit',
                     year: 'numeric',
                   })}
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                  <span className="text-xs text-muted">
                     · {getSeasonYearLabelFromTimestamp(offer.savedAt)}
                   </span>
                 </div>
-                <div className="pl-6 text-slate-400 dark:text-slate-500 text-xs flex justify-between gap-2">
+                <div className="pl-6 text-muted text-xs flex justify-between gap-2">
                   <span className="truncate">{offer.input?.targetGroup ?? '–'}</span>
                   <span className="shrink-0">{offer.input?.duration ?? '–'}</span>
                 </div>
@@ -426,7 +426,7 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
               <button
                 type="button"
                 onClick={() => onSelect(offer)}
-                className="w-full py-3 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl group-hover:bg-orange-500 group-hover:text-white dark:group-hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-surface-2 text-ink font-semibold rounded-xl group-hover:bg-accent group-hover:text-on-accent transition-colors flex items-center justify-center gap-2"
               >
                 <Eye size={18} /> Ansehen
               </button>
@@ -441,18 +441,18 @@ const Library: React.FC<LibraryProps> = ({ onSelect }) => {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || listLoading}
-            className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-full bg-surface border border-line disabled:opacity-50 hover:bg-surface-2 transition-colors"
           >
             <ChevronLeft size={20} />
           </button>
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          <span className="text-sm font-medium text-muted">
             Seite {page} von {matchPages}
           </span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(matchPages, p + 1))}
             disabled={page === matchPages || listLoading}
-            className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-full bg-surface border border-line disabled:opacity-50 hover:bg-surface-2 transition-colors"
           >
             <ChevronRight size={20} />
           </button>
