@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, projectRoot, '');
   return {
     /** Relativ zu index.html – funktioniert auch hinter Unterpfaden / Tunnel ohne falsche `/assets`-URLs. */
-    base: './',
+    base: '/',
     server: {
       port: 3000,
       host: '0.0.0.0',
