@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { DetailSheet, StatButton, type DetailDef } from './DetailSheet';
 import {
   ArrowRight,
   BookOpen,
@@ -28,6 +29,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiUsage, apiLimit, onOpenOffer }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
+  const [detail, setDetail] = useState<DetailDef | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,11 +67,71 @@ const Dashboard: React.FC<DashboardProps> = ({ apiUsage, apiLimit, onOpenOffer }
   const offersTotal = meta ? String(meta.total) : '—';
   const periodsTotal = meta ? String(meta.periods.length) : '—';
 
+  // Jede Kennzahl ist anklickbar und zeigt die passenden Eintraege
+  const ladenAngebote = async () => {
+    const res = await fetch('/api/offers?limit=60', { credentials: 'include' });
+    const d = (await res.json()) as { offers?: SavedOffer[] };
+    return d.offers ?? [];
+  };
+
   const stats = [
-    { value: offersTotal, label: 'Angebote gespeichert' },
-    { value: String(Object.values(OfferCategory).length), label: 'Angebotsarten' },
-    { value: String(Object.values(TargetGroup).length), label: 'Zielgruppen' },
-    { value: periodsTotal, label: 'Jahreszeiten belegt' },
+    {
+      value: offersTotal,
+      label: 'Angebote gespeichert',
+      detail: {
+        titel: 'Angebote gespeichert',
+        hinweis: 'Alle gespeicherten Angebote, neueste zuerst.',
+        hoeherBesser: true,
+        laden: async () =>
+          (await ladenAngebote()).map((o) => ({
+            label: new Date(o.savedAt).toLocaleDateString('de-DE') + ' · ' + o.title,
+            wert: 1,
+          })),
+      },
+    },
+    {
+      value: String(Object.values(OfferCategory).length),
+      label: 'Angebotsarten',
+      detail: {
+        titel: 'Angebotsarten',
+        hinweis: 'Wie oft jede Angebotsart vorkommt.',
+        laden: async () => {
+          const zaehler = new Map<string, number>();
+          for (const o of await ladenAngebote()) {
+            zaehler.set(o.input.category, (zaehler.get(o.input.category) ?? 0) + 1);
+          }
+          return [...zaehler.entries()].map(([k, v]) => ({ label: k, wert: v })).sort((a, b) => b.wert - a.wert);
+        },
+      },
+    },
+    {
+      value: String(Object.values(TargetGroup).length),
+      label: 'Zielgruppen',
+      detail: {
+        titel: 'Zielgruppen',
+        hinweis: 'Wie sich deine Angebote auf die Zielgruppen verteilen.',
+        laden: async () => {
+          const zaehler = new Map<string, number>();
+          for (const o of await ladenAngebote()) {
+            zaehler.set(o.input.targetGroup, (zaehler.get(o.input.targetGroup) ?? 0) + 1);
+          }
+          return [...zaehler.entries()].map(([k, v]) => ({ label: k, wert: v })).sort((a, b) => b.wert - a.wert);
+        },
+      },
+    },
+    {
+      value: periodsTotal,
+      label: 'Jahreszeiten belegt',
+      detail: {
+        titel: 'Jahreszeiten belegt',
+        hinweis: 'Welche Jahreszeiten schon Angebote haben.',
+        laden: async () => {
+          const res = await fetch('/api/offers/meta', { credentials: 'include' });
+          const m = (await res.json()) as OffersMeta;
+          return (m.periods ?? []).map((p) => ({ label: p, wert: 1 }));
+        },
+      },
+    },
   ];
 
   return (
@@ -84,10 +146,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiUsage, apiLimit, onOpenOffer }
 
         <dl className="stat-row">
           {stats.map((s) => (
-            <div className="stat" key={s.label}>
-              <dt className="stat__value">{s.value}</dt>
-              <dd className="stat__label">{s.label}</dd>
-            </div>
+            <StatButton key={s.label} value={s.value} label={s.label} onClick={() => setDetail({ ...s.detail } as DetailDef)} />
           ))}
         </dl>
       </header>
@@ -192,6 +251,8 @@ const Dashboard: React.FC<DashboardProps> = ({ apiUsage, apiLimit, onOpenOffer }
           )}
         </div>
       </section>
+
+      {detail && <DetailSheet def={detail} onClose={() => setDetail(null)} />}
     </>
   );
 };
