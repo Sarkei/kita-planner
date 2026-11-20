@@ -3,7 +3,6 @@ import { OfferData, OfferCategory, MaterialItem } from '../types';
 import { CheckCircle, Clock, Users, Download, Scissors, Image as ImageIcon, Check, Edit2, FileText, Loader2 } from 'lucide-react';
 import { useToasts } from '../src/components/Toasts';
 import { preparationItemsForList } from '../utils/preparationFormat';
-import { generatePDF } from '../utils/pdfGenerator';
 
 interface OfferDisplayProps {
   offer: OfferData;
@@ -77,10 +76,19 @@ const OfferDisplay: React.FC<OfferDisplayProps> = ({ offer, onUpdate, isAutoGene
       await new Promise(resolve => setTimeout(resolve, 800));
       
       try {
-          // Wrap in another timeout to ensure browser paint
+          // jsPDF wiegt ~384 KB und wird nur hier gebraucht - erst beim Export laden.
           setTimeout(() => {
-              generatePDF(offer);
-              setIsExporting(false);
+              void (async () => {
+                  try {
+                      const { generatePDF } = await import('../utils/pdfGenerator');
+                      await generatePDF(offer);
+                  } catch (e) {
+                      console.error('PDF-Export fehlgeschlagen', e);
+                      toasts.push({ type: 'error', message: 'Fehler beim PDF Export' });
+                  } finally {
+                      setIsExporting(false);
+                  }
+              })();
           }, 100);
       } catch (e) {
           console.error(e);
