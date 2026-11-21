@@ -4,6 +4,7 @@ import './index.css';
 import './shell.css';
 import App from './App';
 import { getDemoToken, isDemoEntry, startDemoSession } from './services/api';
+import { starteSichtbareHoehe } from './src/lib/vvHeight';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -26,6 +27,9 @@ async function boot(): Promise<void> {
     window.history.replaceState({}, '', url.pathname + url.search + url.hash);
   }
 
+
+// Sichtbare Hoehe als CSS-Variable (Tastatur auf dem Handy).
+starteSichtbareHoehe();
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
