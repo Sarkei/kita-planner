@@ -1,13 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-kita-bg: #f4f4f5;
-  --color-kita-dark: #18181b;
-  --color-kita-card: #ffffff;
-  --color-kita-cardDark: #27272a;
-  --color-kita-primary: #f97316;
+  --color-kita-bg: #101312;
+  --color-kita-dark: #101312;
+  --color-kita-card: #16211c;
+  --color-kita-cardDark: #16211c;
+  --color-kita-primary: #4fbf8b;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Gemeinsames Design-System — gleiche Namen wie in den anderen Apps */
+  --color-accent: #4fbf8b;
+  --color-accent-soft: rgba(79, 191, 139, 0.14);
+  --color-accent-ink: #b9e8d0;
+  --color-on-accent: #08150f;
+  --color-surface: #16211c;
+  --color-ink: #e9edeb;
+  --color-muted: #a4aaa7;
+  --color-line: #2b2f2d;
+  --color-danger: #f08a7a;
+
   --font-hand: "Comic Sans MS", "Chalkboard SE", ui-sans-serif, sans-serif;
 
   --animate-fade-in: fade-in 0.3s ease-out both;
@@ -40,4 +51,24 @@
 
 body {
   font-family: var(--font-sans);
+}
+
+/* ------------------------------------------------- Mobile Normalisierung */
+
+/*
+ * Maßstab ist der Fitness-Tracker: 10–11px Grundtext, 24px Seitenüberschrift,
+ * Touch-Ziele mindestens 40px.
+ */
+@media (max-width: 639px) {
+  h1 { font-size: 24px; line-height: 1.15; }
+  h2 { font-size: 16px; }
+
+  button, a, select, input[type='button'] {
+    min-height: 40px;
+  }
+
+  button.p-1\.5, button.p-1 {
+    min-height: 36px;
+    min-width: 36px;
+  }
 }
