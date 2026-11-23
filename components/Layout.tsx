@@ -14,8 +14,7 @@ interface LayoutProps {
 
 /** Bereiche der App — Kopfzeile und Mobilmenü teilen sich diese Liste. */
 const NAV = [
-  { to: '/', label: 'Übersicht', also: [] as string[] },
-  { to: '/neu', label: 'Neues Angebot', also: ['/angebot'] },
+  { to: '/neu', label: 'Neues Angebot', also: ['/angebot', '/', '/uebersicht'] },
   { to: '/bibliothek', label: 'Bibliothek', also: [] as string[] },
 ];
 
@@ -40,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({
     <div className="app">
       <header className="app-header">
         <div className="app-container app-header__inner">
-          <Link to="/" className="app-brand" aria-label="Kita-Planer — Übersicht">
+          <Link to="/neu" className="app-brand" aria-label="Kita-Planer — Neues Angebot">
             <span className="app-brand__mark">
               <BookOpen size={20} />
             </span>

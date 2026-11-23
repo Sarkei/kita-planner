@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
 import OfferForm from './components/OfferForm';
 import OfferDisplay from './components/OfferDisplay';
 import Library from './components/Library';
@@ -352,9 +351,10 @@ const AppContent = ({ isDarkMode, toggleTheme }: { isDarkMode: boolean, toggleTh
         </div>
       )}
       <Routes>
-        <Route path="/" element={
-          <Dashboard apiUsage={apiUsage} apiLimit={API_DAILY_LIMIT} onOpenOffer={handleSelectFromLibrary} />
-        } />
+        {/* Startseite ist der Generator: das Dashboard davor zeigte nur Kennzahlen
+            und Karten zu den drei Bereichen. /uebersicht faengt alte Links ab. */}
+        <Route path="/" element={<Navigate to="/neu" replace />} />
+        <Route path="/uebersicht" element={<Navigate to="/neu" replace />} />
 
         <Route path="/neu" element={
           <>
