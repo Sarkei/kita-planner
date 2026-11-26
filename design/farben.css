@@ -1,0 +1,108 @@
+/* ==========================================================================
+   farben.css — ERZEUGT aus kit/paletten.json. Nicht hier ändern!
+
+   App:        Kita-Planner
+   Charakter:  Himmelblau · freundlich, hell, verspielt rund
+   Dichte:     luftig (Radius 18px)
+
+   Änderung: kit/paletten.json bearbeiten, dann
+       python3 kit/build.py kita --nach <projektordner>
+   ========================================================================== */
+
+:root {
+  /* --- Akzent (Marke der App) ------------------------------------------ */
+  --accent: #6fb3d4;
+  --accent-hover: #87c2df;
+  --accent-soft: rgb(111 179 212 / 0.16);
+  --accent-ink: #c8e4f2;
+  --on-accent: #061116;
+
+  /* --- Status (in jeder App gleich, damit Warnungen nicht verwirren) --- */
+  --danger: #f08a7a;
+  --danger-soft: rgb(240 138 122 / 0.14);
+  --warn: #e8b25f;
+  --warn-soft: rgb(232 178 95 / 0.14);
+  --success: #63c79a;
+  --success-soft: rgb(99 199 154 / 0.14);
+
+  /* --- Form: Radius aus der Palette, Dichte aus dem Charakter ---------- */
+  --radius-sm: 14px;
+  --radius: 18px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --karte-padding: 24px;
+  --sektion-abstand: 44px;
+  --hero-abstand: 52px;
+  --ziel-hoehe: 42px;
+  --titel-groesse: clamp(25px, 4vw, 36px);
+  --stat-groesse: 30px;
+  --raster-abstand: 14px;
+
+  /* --- Schrift --------------------------------------------------------- */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --font-zahlen: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  color-scheme: dark;
+}
+
+/* --- DUNKEL: Standard ------------------------------------------------
+   `.dark` ist mit aufgeführt, weil ältere Apps den Darkmode über eine Klasse am
+   <html>-Element schalten statt über data-theme. Ohne diesen Selektor bleiben sie im
+   hellen Standard hängen, obwohl sie dunkel wollen. */
+[data-theme='dark'],
+.dark,
+:root:not([data-theme='light']) {
+  --bg: #0d1316;
+  --surface: #172026;
+  --surface-2: #1e282f;
+  --surface-3: #26323a;
+
+  --ink: #e9edeb;
+  --muted: #a4aaa7;
+  --placeholder: #9aa5a0;
+
+  --line: #2b2f2d;
+  --line-strong: #383c3a;
+
+  color-scheme: dark;
+}
+
+/* --- HELL ------------------------------------------------------------ */
+[data-theme='light'],
+.light:not(.dark) {
+  --bg: #f1f6f8;
+  --surface: #ffffff;
+  --surface-2: #e7ecee;
+  --surface-3: #dde2e4;
+
+  --ink: #121a16;
+  --muted: #55635c;
+  --placeholder: #6b7873;
+
+  --line: #dde3df;
+  --line-strong: #c6cfc9;
+
+  --accent: #2f718f;
+  --accent-hover: #265d76;
+  --accent-soft: #040b0e;
+  --accent-ink: #102732;
+  --on-accent: #ffffff;
+
+  color-scheme: light;
+}
+
+/* --- Aliasse für vorhandene Komponenten ------------------------------ */
+:root {
+  --background: var(--bg);
+  --card-bg: var(--surface);
+  --card: var(--surface);
+  --panel: var(--surface);
+  --foreground: var(--ink);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --border: var(--line);
+  --brand: var(--accent);
+  --primary: var(--accent);
+}
